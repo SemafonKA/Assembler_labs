@@ -8,7 +8,7 @@ EXTERN  GetStdHandle@4: PROC		; Функция получения дескрипторов ввода (-10) и выв
 EXTERN  WriteConsoleA@20: PROC
 EXTERN  ReadConsoleA@20: PROC
 EXTERN  lstrlenA@4: PROC			; функция определения длины строки
-EXTERN  CharToOemA@8: PROC			; хз пока что это
+EXTERN  CharToOemA@8: PROC			; Переводит char символы в oem символы
 EXTERN  ExitProcess@4: PROC			; функция выхода из программы
 
 .CONST								; Сегмент констант
@@ -17,8 +17,6 @@ EXTERN  ExitProcess@4: PROC			; функция выхода из программы
 	; Переменные для процедуры HexToDecimal@12
 	intPtr		dword 0					; Указатель на целое число в функции
 	strPtr		dword 0					; Указатель на начало функции
-	i			dword 0					; Переменная i 
-	p			dword 0					; Переменная p
 	k			byte  0					; Переменная под буквы
 
 	; Переменные для процедуры DecimalToStr@16
@@ -38,7 +36,7 @@ EXTERN  ExitProcess@4: PROC			; функция выхода из программы
 
 	firstNum	sdword 0				; Переменная с первым введённым числом
 	secondNum	sdword 0				; Переменная со вторым введённым числом
-.CODE								; сегмент кода 
+.CODE									; сегмент кода 
 MAIN PROC; начало описания процедуры с именем MAIN
 	push -10		; Получаем дескриптор ввода
 	CALL GetStdHandle@4
@@ -108,7 +106,7 @@ MAIN PROC; начало описания процедуры с именем MAIN
 	sub eax, secondNum
 	mov firstNum, eax		; Вычитаем второе число из первого, сохраняем в первом
 
-	push 0
+	push firstNum
 	call ExitProcess@4
 MAIN ENDP; завершение описания процедуры с именем MAIN
 
@@ -133,9 +131,9 @@ DecimalToStr@16 proc
 	mov ebx, 0
 	mov [eax], ebx
 
-	; Перебор всего числа, запись строки в обратном порядке
-	; Если число отрицательное, то дописать минус в конец
-	; Переворот строки путём обмена крайних символов на одном расстоянии
+	; Перебор всего числа, запись цифр числа в стек
+	; Если число отрицательное, то пишем в буфер минус
+	; Извлекаем цифры из стека, добавляем к ним '0', пишем в буфер
 
 	pop ebp			; Возвращаем прежнее значение бегунка
 	ret	16			; Выходим из процедуры, при этом говорим напрямую, что после выхода нужно сдвинуть указатель на 4 элемента:
@@ -158,13 +156,8 @@ HexToDecimal@12 proc	; Начало процедуры
 	mov eax, intPtr
 	mov ebx, 0
 	mov [eax], ebx		; Записали по адресу intPtr значение ноль
-
-	mov i, 0
-	mov p, ecx
-	dec p
 	
 loopBegin1: 			; Метка начала цикла
-	
 		mov eax, strPtr
 		mov bh, [eax]
 		mov k, bh		; записываем текущую букву в k
@@ -180,27 +173,15 @@ loopBegin1: 			; Метка начала цикла
 
 	getToNum:
 
-		push ecx			; Записываем итератор внешнего цикла в стек
-		mov ecx, p
-
-		mov eax, 1			; Инициализируем eax для умножения
-		cmp ecx, 0
-		je powLoopSkip		; Если ecx = 0, то пропускаем цикл возведения в степень
-	loopPowBegin1:
-		; здесь должно быть умножение аля возведение в степень
-		mul const_base
-	loop loopPowBegin1
-
-	powLoopSkip:
-		pop ecx				; Возвращаем прежний итератор из стека
-		mul k				; Умножаем получившийся eax на k
-
 		mov ebx, intPtr
-		add [ebx], eax		; Добавляем в переменную по intPtr полученное на итерации число
+		mov eax, [ebx]
+		mul const_base
+		mov [ebx], eax
+		xor eax, eax
+		mov al, k
+		add [ebx], eax
 
-		add strPtr, 1		; Смещаем строку на символ
-		inc i
-		dec p
+		adc strPtr, 1
 	loop loopBegin1
 
 	pop ebp			; Возвращаем прежнее значение бегунка
