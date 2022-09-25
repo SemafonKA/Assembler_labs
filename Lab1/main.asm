@@ -251,54 +251,50 @@ HexToDecimal@12 proc	; Начало процедуры
 	mov eax, strPtr
 	mov bh, [eax]
 	mov k, bh			; записываем текущую букву в k
-	cmp k, '-'			; Сравниваем с минусом
-	jne loopBegin1
-	mov signFlag, 1
 
-loopBegin1: 			; Метка начала цикла
+	.if k == '-'		; Если первым символом стоит минус, то запоминаем этот факт
+		mov signFlag, 1
+		add strPtr, 1	; Сдвигаем указатель со знака минуса на следующий
+		dec ecx			; Уменьшаем ecx на 1 (число символов в строке)
+	.endif
+
+	.while ecx			; Пока ecx не равен нулю
 		mov eax, strPtr
 		mov bh, [eax]
 		mov k, bh		; записываем текущую букву в k
-		sub k, '0'
+		sub k, '0'		; Вычитаем символ нуля
 
-		cmp k, 9			; Если k меньше или равно 9, то
-		jbe getToNum		; Переход к метке getToNum
+		.if k > 9		; Если k вышло больше 9, то либо там буква, либо ошибка
+			mov bh, [eax]
+			mov k, bh
+			sub k, 'A'	; Вычитаем из текущей буквы символ А
 
-		mov bh, [eax]
-		mov k, bh
-		sub k, 'A'
+			.if k > 5	; Если и так не подошло, то выкидываем ошибку и выходим из подпрограммы
+				call PrintErr
+				jmp HexToDecExit
+			.endif	
 
-		cmp k, 5
-		jbe add10		; Если k меньше или равно 5, то всё ок
+			add k, 10
+		.endif
 		
-		; Если введено что-то неправильное, то выдаём ошибку
-		call PrintErr
-		jmp HexToDecExit
-	
-	add10:
-	
-		add k, 10
-
-	getToNum:
-		
-		mov ebx, intPtr
-		mov eax, [ebx]
-		mul const_base
-		mov [ebx], eax
+		mov ebx, intPtr	
+		mov eax, [ebx]	; Записываем в eax текущее число
+		mul const_base	; Домножаем его на систему счисления (16)
+		mov [ebx], eax	; Записываем полученный результат обратно в число
 		xor eax, eax
 		mov al, k
-		add [ebx], eax
+		add [ebx], eax	; Добавляем к числу значение текущей цифры
 
 		add strPtr, 1
-	loop loopBegin1
+		dec ecx			
+	.endw
 
-	cmp signFlag, 1		; Если число отрицательное, то
-	jne HexToDecExit
-	mov ebx, intPtr
-	mov eax, [ebx]
-	mov ecx, -1
-	mul ecx
-	mov [ebx], eax
+	.if signFlag == 1		; Если число отрицательное, то
+		mov ebx, intPtr
+		mov eax, [ebx]
+		neg eax
+		mov [ebx], eax
+	.endif	
 
 HexToDecExit:
 	pop ebp			; Возвращаем прежнее значение бегунка
