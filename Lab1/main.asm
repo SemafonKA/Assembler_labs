@@ -190,7 +190,7 @@ DecimalToStr@16 proc
 	.endif
 
 	; Перебор всего числа, запись цифр числа в стек
-	.while num
+	.repeat	
 		xor edx, edx		; При делении на 4 байта, фактически делим edx&eax на что-то, потому edx занулим
 		mov eax, num		; Записываем в eax текущий num для его деления
 		mov ebx, 10			; Записываем делитель в ebx
@@ -202,7 +202,7 @@ DecimalToStr@16 proc
 		mov eax, factSizePtr
 		mov edx, 1
 		add [eax], edx		; Добавляем единицу в фактический размер строки
-	.endw
+	.until num == 0
 
 	; Извлекаем цифры из стека, добавляем к ним '0', пишем в буфер
 	mov eax, factSizePtr
