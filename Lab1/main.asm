@@ -258,6 +258,11 @@ HexToDecimal@12 proc	; Начало процедуры
 		dec ecx			; Уменьшаем ecx на 1 (число символов в строке)
 	.endif
 
+	.if ecx < 3
+		call PrintErr
+		jmp HexToDecExit
+	.endif	
+
 	.while ecx			; Пока ecx не равен нулю
 		mov eax, strPtr
 		mov bh, [eax]
