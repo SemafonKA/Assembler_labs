@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="..\..\..\..\..\..\..\..\..\Users\Semaf\Downloads\Source.asm">
+    <MASM Include="lab2.asm">
       <Filter>Исходные файлы</Filter>
     </MASM>
   </ItemGroup>
