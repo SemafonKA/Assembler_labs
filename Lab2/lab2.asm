@@ -35,10 +35,13 @@ EXTERN  ExitProcess@4: PROC			; функция выхода из программы
 	outPrint1		byte  "Result string: ", 0
 	outPrint1_len	dword ?
 
+	errOut1			byte "Wrong count of repeats. Program aborts", 13, 10, 0
+	errOut1_len		dword 41
+
 	outNewLineStr	  byte  13, 10, 0
 	outNewLineStr_len dword 2
 
-	inputStr	byte 256 dup (?)
+	inputStr	byte 257 dup (?)
 	inputStrLen dword ?
 
 	outStr		byte 512 dup (?)
@@ -72,7 +75,7 @@ MAIN PROC; начало описания процедуры с именем MAIN
 
 	push 0
 	push offset inputStrLen
-	push 256
+	push 257
 	push offset inputStr
 	push din
 	call ReadConsoleA@20	; Считываем строку с консоли
@@ -113,6 +116,18 @@ MAIN PROC; начало описания процедуры с именем MAIN
 	push offset inputRepeatsStr
 	call Stoi@8				; Переводим строку в число
 	mov numRepeats, eax	
+
+	.if numRepeats == 0
+		push 0
+		push 0
+		push errOut1_len
+		push offset errOut1
+		push dout
+		CALL WriteConsoleA@20	; Выводим ошибку в консоль
+
+		push -1
+		call ExitProcess@4		; Выходим из проги
+	.endif
 
 ; Получаем итоговую строку
 	push numRepeats
