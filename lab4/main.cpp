@@ -3,14 +3,21 @@
 using namespace std;
 
 extern "C"
-float Compute(float x);
+int Compute(float x, float* y);
 
 int main() {
    setlocale(LC_ALL, "ru-RU");
-   float x;
+   float x, y;
    cout << "Введите число х: ";
    cin >> x;
-   float y = Compute(x);
-   cout << "Полученное значение: " << y << endl;
+
+   if (Compute(x, &y))
+   {
+      cout << "Ошибка во время вычислений: деление на ноль." << endl;
+   }
+   else
+   {
+      cout << "Полученное значение: " << y << endl;
+   }
    return 0;
 }
